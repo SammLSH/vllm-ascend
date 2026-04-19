@@ -47,7 +47,7 @@ This is the full call chain that GPU users can run out of the box after PR #2762
 flowchart TD
     CLI["<b>User CLI</b><br/>--kv-offloading-backend native&#124;lmcache<br/>--kv-offloading-size N"]
 
-    UP["<b>VllmConfig.&#95;&#95;post&#95;init&#95;&#95;</b><br/>translation layer · PR #27621"]
+    UP["<b>VllmConfig.__post_init__</b><br/>translation layer · PR #27621"]
 
     OC["<b>OffloadingConnector</b><br/>native path"]
     LC["<b>LMCacheConnectorV1</b><br/>lmcache path"]
@@ -86,7 +86,7 @@ Same CLI on 910B: Figure 2a shows the path a user takes when following upstream 
 ```mermaid
 flowchart LR
     CLI1["<b>User CLI</b><br/>--kv-offloading-backend<br/>native&#124;lmcache"]
-    UP1["<b>VllmConfig.&#95;&#95;post&#95;init&#95;&#95;</b><br/>produces GPU-only config"]
+    UP1["<b>VllmConfig.__post_init__</b><br/>produces GPU-only config"]
     FAIL["<b>Runtime crash on NPU</b><br/>cudaMemcpyAsync not available<br/>LMCacheConnectorV1 class missing"]
 
     CLI1 --> UP1 -.->|GPU-only connector| FAIL
@@ -108,7 +108,7 @@ The translation layer is platform-unaware — whether the runtime is CUDA or NPU
 flowchart TD
     CLI2["<b>User CLI (expert mode)</b><br/>--kv-transfer-config '{&quot;kv_connector&quot;:&quot;LMCacheAscendConnector&quot;,...}'<br/>+ manually exported LMCACHE_&#42; env vars"]
     LMA["<b>LMCacheAscendConnector</b><br/>PR #6882 · v0.17.0rc1"]
-    TNPU["<b>torch&#95;npu runtime</b>"]
+    TNPU["<b>torch_npu runtime</b>"]
     HW["<b>Atlas 800I A2 · Ascend 910B</b>"]
 
     CLI2 --> LMA --> TNPU --> HW
@@ -138,17 +138,17 @@ Insert a platform hook inside `NPUPlatform.check_and_update_config()` that **int
 flowchart TD
     CLI["<b>User CLI</b><br/>--kv-offloading-backend native&#124;lmcache<br/>--kv-offloading-size N"]
 
-    UP["<b>Upstream vLLM translation layer</b><br/>VllmConfig.&#95;&#95;post&#95;init&#95;&#95;<br/>(PR #27621, merged 2025-11-01)"]
+    UP["<b>Upstream vLLM translation layer</b><br/>VllmConfig.__post_init__<br/>(PR #27621, merged 2025-11-01)"]
 
-    Hook["<b>vllm-ascend platform hook &nbsp;·&nbsp; this RFC</b><br/>NPUPlatform.check&#95;and&#95;update&#95;config()<br/>— rewires config for Ascend —"]
+    Hook["<b>vllm-ascend platform hook &nbsp;·&nbsp; this RFC</b><br/>NPUPlatform.check_and_update_config()<br/>— rewires config for Ascend —"]
 
     NPUConn["<b>NPUOffloadingConnector</b><br/>native path &nbsp;·&nbsp; new"]
     LMConn["<b>LMCacheAscendConnector</b><br/>lmcache path &nbsp;·&nbsp; PR #6882"]
 
-    NPUBack["<b>NPUCPUBackend</b><br/>torch&#95;npu async copy"]
+    NPUBack["<b>NPUCPUBackend</b><br/>torch_npu async copy"]
     LMKernel["<b>LMCache-Ascend kernel</b><br/>LMCache/LMCache-Ascend repo"]
 
-    TorchNPU["<b>torch&#95;npu runtime</b><br/>H2D / D2H transfer"]
+    TorchNPU["<b>torch_npu runtime</b><br/>H2D / D2H transfer"]
 
     HW["<b>Atlas 800I A2 &nbsp;·&nbsp; Ascend 910B</b><br/>NPU HBM &nbsp;◄── PCIe Gen4 x16 ──►&nbsp; Host DRAM"]
 
